@@ -1,0 +1,80 @@
+# reads in the top level file act file
+act:read "top_hasher.out.act"
+
+# add the cells file to the design
+act:merge "cells.act"   
+
+# expand the design, substituting all parameters  
+act:expand               
+
+# set the top-level process name
+act:top "ring_top_hasher" 
+
+# map all the production rules to the cells
+ckt:cell-map           
+# generate the transistor-level circuit
+ckt:map
+
+# set the layout density, and calculate the area multiplier
+#define density 0.65
+define density 0.45
+
+# define area (* 1.05 (/ 1 density))
+define area (* 1.05 (/ 1 density))
+
+# load the layout generation modules
+load-scm "phydb.scm"                 
+# create the layout problem
+phydb:create area 0.75 "output.lef"   
+
+# emit .rect files for all cells needed
+act:layout:rect            
+
+# initialize Dali, the cell placer
+dali:init 3                
+# place the design
+dali:place-design density  
+# place I/Os
+# dali:place-io "m1"
+dali:place-io "met1"         
+# export placement information to the layout db
+dali:export-phydb          
+# wrap up placement
+dali:close                 
+
+# initialize power detailed router
+pwroute:init 0    
+# disable reinforcement 
+pwroute:set_reinforcement 0
+# wire up power and ground   
+pwroute:run                
+# save to db
+pwroute:export-phydb       
+# end power routing
+pwroute:close              
+
+# initialize global router
+sproute:init 0
+# compute global routes
+sproute:run                
+# end global routing phase
+sproute:close              
+
+# save guide file summarizing global routes
+phydb:write-guide "output.guide"  
+# save DEF file
+phydb:write-def "output.def"      
+
+# save two additional well/select files
+phydb:write-aux-rect "output"     
+
+# update output.lef
+system "rect2lef.pl output_ppnp circuitppnp 1 >> output.lef"
+system "rect2lef.pl output_wells circuitwell 1 >> output.lef"
+
+# save well information
+phydb:write-aux-rect "output"  
+# update LEF to include definitions of wells
+phydb:update-lef "output"
+
+display-object (phydb:get-gaps)
