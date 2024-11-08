@@ -1,11 +1,31 @@
 #!/bin/python3
+'''
+ * Copyright 2024 Thomas Jagielski
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+'''
 
 import subprocess
 import re
 
+offset_spacing = 9.35
+
 lef_name = 'output'
 routed_def = 'routed'
 magic_file_name = 'top'
+
+subprocess.run("python3 parse_interact_output.py > fill.tcl", shell=True, text=True, capture_output=False)
+subprocess.run("python3 drc_find_script.py > drc_fix.tcl", shell=True, text=True, capture_output=False)
 
 # Generate top.mag from lef and def files
 magic_sequence = '''
@@ -316,8 +336,8 @@ vertical_origin_offset = horizontal_origin_offset
 horizontal_bbox_offset_outside_left = round((gnd_bottom_left_coordinate[0] - die_llx) / 1000, 2) - (track_width / 2) # um
 horizontal_bbox_offset_inside_left = round((vdd_bottom_left_coordinate[0] - die_llx) / 1000, 2) - (track_width / 2) # um
 
-horizontal_bbox_offset_outside_right = (track_width / 2) #round((die_urx - vdd_bottom_right_coordinate[0]) / 1000, 2) # um
-horizontal_bbox_offset_inside_right = (track_width / 2) + track_width + track_spacing #- 0.95 # um
+horizontal_bbox_offset_outside_right = (track_width / 2) + offset_spacing#round((die_urx - vdd_bottom_right_coordinate[0]) / 1000, 2) # um
+horizontal_bbox_offset_inside_right = (track_width / 2) + track_width + track_spacing + offset_spacing#- 0.95 # um
 
 # -- Use this for connecting to the first (inner) ring -- 
 for origin in coordinates["top_gnd"]:
@@ -377,30 +397,31 @@ pin_layer = 'li'
 pin_growth_micron = "20um"
 
 for item in pins_list:
+    item_port = item.replace(".", r"\.").replace("[", r"\[").replace("]", r"\]")
     if pins_list[item][1] == die_lly:
         # bottom_pins.append(item)
-        print("goto " + item, file = tcl)
+        print("goto " + item_port, file = tcl)
         print("box", file = tcl)
         print("box grow s " + pin_growth_micron, file = tcl)
         print("paint " + pin_layer, file = tcl)
 
     if pins_list[item][1] == die_ury:
         # top_pins.append(item)
-        print("goto " + item, file = tcl)
+        print("goto " + item_port, file = tcl)
         print("box", file = tcl)
         print("box grow n " + pin_growth_micron, file = tcl)
         print("paint " + pin_layer, file = tcl)
 
     if pins_list[item][0] == die_llx:
         # left_pins.append(item)
-        print("goto " + item, file = tcl)
+        print("goto " + item_port, file = tcl)
         print("box", file = tcl)
         print("box grow w " + pin_growth_micron, file = tcl)
         print("paint " + pin_layer, file = tcl)
     
     if pins_list[item][0] == die_urx:
         # right_pins.append(item)
-        print("goto " + item, file = tcl)
+        print("goto " + item_port, file = tcl)
         print("box", file = tcl)
         print("box grow e " + pin_growth_micron, file = tcl)
         print("paint " + pin_layer, file = tcl)

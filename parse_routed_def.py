@@ -1,4 +1,19 @@
 #!/bin/python3
+'''
+ * Copyright 2024 Thomas Jagielski
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+'''
 
 import re
 from collections import defaultdict
@@ -144,7 +159,7 @@ def extract_coordinates_from_file(filename):
                 if line.startswith('-'):
                     net_name = None
                 if "NET" in line:
-                    pattern = r'\+ NET\s+(\w+)'
+                    pattern = r'\+ NET\s+([A-Za-z0-9_?.]+(?:\[\d+\])?)' #r'\+ NET\s+(\w+)'
                     # Apply the regex to extract the net name
                     match = re.search(pattern, line)
                     # If a match is found, print the net name
@@ -213,5 +228,5 @@ def main(filename):
 if __name__ == '__main__':
     filename = "./routed.def"
 
-    output_coordinates = main(filename)
+    output_coordinates, gnd_vertical_stripes, vdd_vertical_stripes, die_area_coordinates, pins_list = main(filename)
 

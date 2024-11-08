@@ -1,4 +1,7 @@
 
+grid 0.05um
+snap user
+
 proc fix {{ message "Hit Y to fix ==> "}} {
   puts -nonewline $message
   flush stdout

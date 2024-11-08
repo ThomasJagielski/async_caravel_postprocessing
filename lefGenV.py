@@ -97,7 +97,7 @@ def extract_info(filename, circuit):
 
  
 def main():
-  filename = "md5_hasher_ring_hide.lef"
+  filename = "top_fill.lef"
   circuit = circuitVerilog()
   extract_info(filename, circuit)
   filename_v = circuit.name+".v"
